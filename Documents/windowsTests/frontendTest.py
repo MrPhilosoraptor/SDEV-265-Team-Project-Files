@@ -23,7 +23,7 @@ from StudyQuest import MainApp, GoalManager, Player, Difficulty, Frequency
 
 
 class _GridTableTestResult(unittest.TextTestResult):
-    """Collect per-test timing and print an ASCII grid table for reporting."""
+    """Collect per-test timing and print an ASCII grid table for results."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
