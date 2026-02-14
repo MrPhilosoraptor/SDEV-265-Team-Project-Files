@@ -182,4 +182,62 @@ class TaskTests(BackendTestBase):
 		self.assertTrue(
 			hasattr(gm, "tasks_for_week"),
 			"Requirements mention weekly planner organization; no tasks_for_week().",
-		)	
+		)
+		
+# Habit Tests
+class HabitTests(BackendTestBase):
+	def test_create_habit(self):
+		_, gm = self._new_profile()
+		gm.add_habit("H1", "", Difficulty.EASY, Frequency.DAILY)
+		self.assertEqual(len(gm.goals), 1)
+		h = gm.goals[0]
+		self.assertIsInstance(h, Habit)
+		self.assertEqual(h.frequency, Frequency.DAILY)
+		self.assertEqual(h.current_streak, 0)
+		self.assertIsNone(h.last_completed)
+
+	def test_habit_xp_reward_on_completion(self):
+		player, gm = self._new_profile()
+		gm.add_habit("H", "", Difficulty.EASY, Frequency.DAILY)
+		xp = gm.complete_by_id(1, date.today())
+		self.assertGreater(xp, 0)
+		before = player.current_xp
+		player += xp
+		self.assertGreater(player.current_xp, before)
+
+	def test_habit_streak_updates_daily(self):
+		_, gm = self._new_profile()
+		gm.add_habit("H", "", Difficulty.EASY, Frequency.DAILY)
+		h = gm.find_by_id(1)
+		self.assertIsInstance(h, Habit)
+
+		day1 = date(2026, 2, 10)
+		day2 = day1 + timedelta(days=1)
+		day3 = day2 + timedelta(days=1)
+
+		gm.complete_by_id(1, day1)
+		self.assertEqual(h.current_streak, 1)
+		gm.complete_by_id(1, day2)
+		self.assertEqual(h.current_streak, 2)
+		gm.complete_by_id(1, day3)
+		self.assertEqual(h.current_streak, 3)
+		self.assertEqual(h.best_streak, 3)
+
+	def test_prevent_multiple_completions_same_day(self):
+		_, gm = self._new_profile()
+		gm.add_habit("H", "", Difficulty.EASY, Frequency.DAILY)
+
+		today = date(2026, 2, 10)
+		xp1 = gm.complete_by_id(1, today)
+		xp2 = gm.complete_by_id(1, today)
+		self.assertGreater(xp1, 0)
+		self.assertEqual(xp2, 0)
+		
+
+if __name__ == "__main__":
+	suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
+	runner = unittest.TextTestRunner(verbosity=2, resultclass=_GridTableTestResult)
+	result = runner.run(suite)
+	print("\n## Backend Test Results (Windows)\n")
+	print(result.render_grid_table())
+	raise SystemExit(0 if result.wasSuccessful() else 1)    
