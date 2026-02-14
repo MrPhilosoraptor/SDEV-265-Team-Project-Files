@@ -330,6 +330,88 @@ class PersistenceTests(BackendTestBase):
 		storage_rel.save(player, gm)
 		self.assertTrue(os.path.exists(storage_rel.path))
 
+# Cross-Platform Logic Tests
+class CrossPlatformLogicTests(BackendTestBase):
+	def test_save_file_format_consistency(self):
+		player, gm = self._new_profile()
+		gm.add_task("T", "D", Difficulty.EASY, date(2026, 2, 20))
+		gm.add_habit("H", "", Difficulty.EASY, Frequency.DAILY)
+		storage = Storage("studyquest_save.txt")
+		storage.save(player, gm)
+
+		raw = open(storage.path, "rb").read()
+		self.assertIn(b"PLAYER|", raw)
+		self.assertIn(b"GOAL|", raw)
+		self.assertIn(b"\n", raw)
+
+		lines = raw.decode("utf-8").splitlines()
+		self.assertTrue(lines[0].startswith("PLAYER|"))
+		self.assertTrue(any(ln.startswith("GOAL|TASK|") for ln in lines))
+		self.assertTrue(any(ln.startswith("GOAL|HABIT|") for ln in lines))
+
+	def test_status_texts_are_stable_strings(self):
+		_, gm = self._new_profile()
+		gm.add_task("T", "", Difficulty.EASY, None)
+		gm.add_habit("H", "", Difficulty.EASY, Frequency.DAILY)
+		t = gm.find_by_id(1)
+		h = gm.find_by_id(2)
+		self.assertIsInstance(t.status_text(), str)
+		self.assertIsInstance(h.status_text(), str)
+		self.assertIn("Streak", h.status_text())
+
+
+# Error Handling Tests
+class ErrorHandlingTests(BackendTestBase):
+	def test_complete_invalid_id_raises(self):
+		_, gm = self._new_profile()
+		with self.assertRaises(ValueError):
+			gm.complete_by_id(999, date.today())
+
+	@unittest.expectedFailure
+	def test_empty_task_title_should_be_rejected(self):
+		_, gm = self._new_profile()
+		gm.add_task("", "", Difficulty.EASY, None)
+		self.assertEqual(len(gm.goals), 0)
+
+	@unittest.expectedFailure
+	def test_empty_habit_title_should_be_rejected(self):
+		_, gm = self._new_profile()
+		gm.add_habit("", "", Difficulty.EASY, Frequency.DAILY)
+		self.assertEqual(len(gm.goals), 0)
+
+	def test_parse_date_validation(self):
+		self.assertEqual(parse_date("2026-02-10"), date(2026, 2, 10))
+		self.assertIsNone(parse_date(""))
+		self.assertIsNone(parse_date("bad"))
+
+	def test_malformed_goal_line_is_rejected(self):
+		storage = Storage("badgoal.txt")
+		with open(storage.path, "w", encoding="utf-8") as f:
+			f.write("PLAYER|Student|1|0|100\n")
+			f.write("GOAL|TASK|not_an_id\n")
+		with self.assertRaises(Exception):
+			storage.load()
+
+
+# Stability and Performance Tests
+class StabilityPerformanceTests(BackendTestBase):
+	def test_large_sets_save_load_and_repeat_cycles(self):
+		player, gm = self._new_profile()
+		for i in range(1500):
+			gm.add_task(f"Task {i}", "", Difficulty.MEDIUM, None)
+		for i in range(1500):
+			gm.add_habit(f"Habit {i}", "", Difficulty.EASY, Frequency.DAILY)
+
+		storage = Storage("studyquest_save.txt")
+		start = time.perf_counter()
+		for _ in range(3):
+			storage.save(player, gm)
+			player, gm = storage.load()
+		elapsed = time.perf_counter() - start
+
+		self.assertEqual(len(gm.goals), 3000)
+		self.assertLess(elapsed, 20.0) 
+
 if __name__ == "__main__":
 	suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
 	runner = unittest.TextTestRunner(verbosity=2, resultclass=_GridTableTestResult)
