@@ -112,3 +112,74 @@ class BackendTestBase(unittest.TestCase):
 
 	def _new_profile(self) -> tuple[Player, GoalManager]:
 		return Player(name="WinTester"), GoalManager()
+
+# Task Tests
+class TaskTests(BackendTestBase):
+	def test_create_task(self):
+		_, gm = self._new_profile()
+		due = date.today() + timedelta(days=2)
+		gm.add_task("T1", "Notes", Difficulty.EASY, due)
+
+		self.assertEqual(len(gm.goals), 1)
+		g = gm.goals[0]
+		self.assertIsInstance(g, Task)
+		self.assertEqual(g.title, "T1")
+		self.assertEqual(g.description, "Notes")
+		self.assertEqual(g.difficulty, Difficulty.EASY)
+		self.assertEqual(g.due_date, due)
+		self.assertFalse(g.completed)
+
+	def test_edit_task_fields(self):
+		_, gm = self._new_profile()
+		gm.add_task("Old", "OldDesc", Difficulty.EASY, None)
+		t = gm.find_by_id(1)
+		self.assertIsInstance(t, Task)
+
+		t.title = "New"
+		t.description = "NewDesc"
+		t.difficulty = Difficulty.HARD
+		t.due_date = date.today()
+
+		self.assertEqual(t.title, "New")
+		self.assertIn("New", t.serialize())
+
+	@unittest.expectedFailure
+	def test_delete_task_by_id_required_but_missing(self):
+		_, gm = self._new_profile()
+		gm.add_task("A", "", Difficulty.EASY, None)
+
+		self.assertTrue(
+			hasattr(gm, "delete_by_id"),
+			"Requirements specify task deletion; backend has no delete_by_id().",
+		)
+
+	def test_mark_task_complete_awards_xp(self):
+		player, gm = self._new_profile()
+		gm.add_task("T", "", Difficulty.MEDIUM, date.today())
+
+		xp = gm.complete_by_id(1, date.today())
+		self.assertGreater(xp, 0)
+		before = player.current_xp
+		player.add_xp(xp)
+		self.assertGreater(player.current_xp, before)
+
+		t = gm.find_by_id(1)
+		self.assertTrue(isinstance(t, Task) and t.completed)
+
+	def test_completed_removed_from_active_list_semantics(self):
+		_, gm = self._new_profile()
+		gm.add_task("T1", "", Difficulty.EASY, None)
+		gm.add_task("T2", "", Difficulty.EASY, None)
+		self.assertEqual(gm.count_tasks(False), 2)
+
+		gm.complete_by_id(1, date.today())
+		self.assertEqual(gm.count_tasks(False), 1)
+		self.assertEqual(gm.count_tasks(True), 1)
+
+	@unittest.expectedFailure
+	def test_weekly_organization_logic_required_but_missing(self):
+		_, gm = self._new_profile()
+		self.assertTrue(
+			hasattr(gm, "tasks_for_week"),
+			"Requirements mention weekly planner organization; no tasks_for_week().",
+		)	
