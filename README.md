@@ -71,10 +71,10 @@ UI Redesign Update
   Cleaner layout separation between major sections
   
   Fixed window dimensions for layout stability
+**
+No Backend Changes**
 
-**No Backend Changes
-
-The following systems remain unchanged:**
+**The following systems remain unchanged:**
   
   Player logic
   
