@@ -1,5 +1,7 @@
 """windowsTests/backendTest.py
 
+	- Run using `python Documents/windowsTests/backendTest.py` from repo root.
+
 Windows OS - Backend unittest
 """
 
@@ -14,11 +16,12 @@ from datetime import date, timedelta
 
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCS_DIR = os.path.abspath(os.path.join(TEST_DIR, ".."))
-if DOCS_DIR not in sys.path:
-	sys.path.insert(0, DOCS_DIR)
+REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
+PROGRAM_DIR = os.path.join(REPO_ROOT, "Program files")
+if PROGRAM_DIR not in sys.path:
+	sys.path.insert(0, PROGRAM_DIR)
 
-from StudyQuest import (
+from StudyQuest_v2 import (
 	Storage,
 	Player,
 	GoalManager,

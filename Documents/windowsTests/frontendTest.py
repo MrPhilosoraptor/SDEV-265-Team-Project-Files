@@ -1,5 +1,7 @@
 """windowsTests/frontendTest.py
 
+    - Run using `python Documents/windowsTests/frontendTest.py` from repo root.
+
 Windows OS - Frontend unittest"""
 
 from __future__ import annotations
@@ -11,15 +13,16 @@ import unittest
 import tempfile
 from unittest import mock
 
-# Make StudyQuest importable when running tests from repo root.
+# Make StudyQuest_v2 importable when running tests from repo root.
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
-DOCS_DIR = os.path.abspath(os.path.join(TEST_DIR, ".."))
-if DOCS_DIR not in sys.path:
-    sys.path.insert(0, DOCS_DIR)
+REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
+PROGRAM_DIR = os.path.join(REPO_ROOT, "Program files")
+if PROGRAM_DIR not in sys.path:
+    sys.path.insert(0, PROGRAM_DIR)
 
 import tkinter as tk
 
-from StudyQuest import MainApp, GoalManager, Player, Difficulty, Frequency
+from StudyQuest_v2 import MainApp, GoalManager, Player, Difficulty, Frequency
 
 
 class _GridTableTestResult(unittest.TextTestResult):
@@ -127,8 +130,11 @@ class FrontendWindowsTests(unittest.TestCase):
         self.assertTrue(hasattr(app, "lbl_level"), "Level label should exist")
         self.assertTrue(hasattr(app, "lbl_xp"), "XP label should exist")
 
-        self.assertIn("Level", app.lbl_level.cget("text"))
-        self.assertIn("XP", app.lbl_xp.cget("text"))
+        # StudyQuest_v2 uses separate caption labels; these hold values only.
+        level_text = app.lbl_level.cget("text")
+        xp_text = app.lbl_xp.cget("text")
+        self.assertTrue(str(level_text).strip().isdigit())
+        self.assertIn("/", str(xp_text))
 
     def test_tk_scaling_smoke_100_125_150(self):
         app = self._build_app_no_popups(save_exists=False)
@@ -161,8 +167,8 @@ class FrontendWindowsTests(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 pass
 
-        with mock.patch("StudyQuest.AddTaskDialog", _FakeTaskDialog), mock.patch(
-            "StudyQuest.AddHabitDialog", _FakeHabitDialog
+        with mock.patch("StudyQuest_v2.AddTaskDialog", _FakeTaskDialog), mock.patch(
+            "StudyQuest_v2.AddHabitDialog", _FakeHabitDialog
         ):
             app.on_add_task()
             app.on_add_habit()
