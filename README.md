@@ -1,7 +1,26 @@
 StudyQuest
 CHANGELOG
+Current Version: 3.0
 
-==================================================
+====================================================================================================
+
+Version 3.0
+Delete Profile button, macOS bug fix, another security feature and small cosmetic changes
+
+Delete Profile Button added.
+
+New file the program works with:
+    studyquest_save.txt.bak - a save file created in case profile deletion fails
+    the program will restore the progress from that file in such case
+  
+"Tasks (pending, completed and total goals)" cosmetic change:
+    It now look as follows: Pending: x | Completed: y | Total Goals: z
+    
+Search label was moved next to the search bar
+
+Fixed the macOS bug where the main program always launched in behind (testing in progress)
+
+====================================================================================================
 
 Version 2.0
 UI Redesign Update
