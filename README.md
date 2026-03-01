@@ -2,7 +2,7 @@ StudyQuest
 CHANGELOG
 Current Version: 3.0
 
-====================================================================================================
+============================================================================
 
 Version 3.0
 Delete Profile button, macOS bug fix, another security feature and small cosmetic changes
@@ -20,7 +20,7 @@ Search label was moved next to the search bar
 
 Fixed the macOS bug where the main program always launched in behind (testing in progress)
 
-====================================================================================================
+============================================================================
 
 Version 2.0
 UI Redesign Update
