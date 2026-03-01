@@ -1,0 +1,3 @@
+PLAYER|Student|1|0|100
+GOAL|TASK|1|Test Task||Hard||0
+GOAL|HABIT|2|Test Habit||Medium|Daily|0|0|
