@@ -1,8 +1,21 @@
-StudyQuest CHANGELOG | Current Version: 3.1
+StudyQuest Program | Current Version: 3.1
 
 ============================================================================
 
-Version 3.1
+Installation steps:
+1)    Install Python 3.8 or higher (recommended 3.9/3.10/3.11) from Python's official website.
+2)    Download the latest version of the StudyQuest Program (currently v3.1)
+3)    Place StudyQuest_v3.1.py in a folder you control.
+4)    Open a terminal / command prompt and cd to that folder.
+5)    Run: python StudyQuest_v3.1.py
+6)    If a save file exists in the folder, StudyQuest will load it;
+      otherwise, the app prompts your name and creates a new profile. 
+
+============================================================================
+
+CHANGELOG
+
+Version: 3.1
 macOS bug fixes
 
 The save file was moved to the following directory:
