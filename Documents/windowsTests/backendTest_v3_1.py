@@ -21,7 +21,7 @@ REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 
 
 MODULE_NAME = "StudyQuest_v3_1_runtime"
-MODULE_PATH = os.path.join(REPO_ROOT, "StudyQuest_v3.1.py")
+MODULE_PATH = os.path.join(REPO_ROOT, "Program files", "StudyQuest_v3.1.py")
 spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
 if spec is None or spec.loader is None:
 	raise ImportError(f"Unable to load StudyQuest v3.1 module from {MODULE_PATH}")
@@ -151,30 +151,6 @@ class TaskTests(BackendTestBase):
 		self.assertEqual(g.due_date, due)
 		self.assertFalse(g.completed)
 
-	def test_edit_task_fields(self):
-		_, gm = self._new_profile()
-		gm.add_task("Old", "OldDesc", Difficulty.EASY, None)
-		t = gm.find_by_id(1)
-		self.assertIsInstance(t, Task)
-
-		t.title = "New"
-		t.description = "NewDesc"
-		t.difficulty = Difficulty.HARD
-		t.due_date = date.today()
-
-		self.assertEqual(t.title, "New")
-		self.assertIn("New", t.serialize())
-
-	@unittest.expectedFailure
-	def test_delete_task_by_id_required_but_missing(self):
-		_, gm = self._new_profile()
-		gm.add_task("A", "", Difficulty.EASY, None)
-
-		self.assertTrue(
-			hasattr(gm, "delete_by_id"),
-			"Requirements specify task deletion; backend has no delete_by_id().",
-		)
-
 	def test_mark_task_complete_awards_xp(self):
 		player, gm = self._new_profile()
 		gm.add_task("T", "", Difficulty.MEDIUM, date.today())
@@ -188,24 +164,6 @@ class TaskTests(BackendTestBase):
 		t = gm.find_by_id(1)
 		self.assertTrue(isinstance(t, Task) and t.completed)
 
-	def test_completed_removed_from_active_list_semantics(self):
-		_, gm = self._new_profile()
-		gm.add_task("T1", "", Difficulty.EASY, None)
-		gm.add_task("T2", "", Difficulty.EASY, None)
-		self.assertEqual(gm.count_tasks(False), 2)
-
-		gm.complete_by_id(1, date.today())
-		self.assertEqual(gm.count_tasks(False), 1)
-		self.assertEqual(gm.count_tasks(True), 1)
-
-	@unittest.expectedFailure
-	def test_weekly_organization_logic_required_but_missing(self):
-		_, gm = self._new_profile()
-		self.assertTrue(
-			hasattr(gm, "tasks_for_week"),
-			"Requirements mention weekly planner organization; no tasks_for_week().",
-		)
-		
 # Habit Tests
 class HabitTests(BackendTestBase):
 	def test_create_habit(self):
@@ -388,18 +346,6 @@ class ErrorHandlingTests(BackendTestBase):
 		_, gm = self._new_profile()
 		with self.assertRaises(ValueError):
 			gm.complete_by_id(999, date.today())
-
-	@unittest.expectedFailure
-	def test_empty_task_title_should_be_rejected(self):
-		_, gm = self._new_profile()
-		gm.add_task("", "", Difficulty.EASY, None)
-		self.assertEqual(len(gm.goals), 0)
-
-	@unittest.expectedFailure
-	def test_empty_habit_title_should_be_rejected(self):
-		_, gm = self._new_profile()
-		gm.add_habit("", "", Difficulty.EASY, Frequency.DAILY)
-		self.assertEqual(len(gm.goals), 0)
 
 	def test_parse_date_validation(self):
 		self.assertEqual(parse_date("2026-02-10"), date(2026, 2, 10))

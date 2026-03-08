@@ -19,7 +19,7 @@ TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
 
 MODULE_NAME = "StudyQuest_v3_1_runtime"
-MODULE_PATH = os.path.join(REPO_ROOT, "StudyQuest_v3.1.py")
+MODULE_PATH = os.path.join(REPO_ROOT, "Program files", "StudyQuest_v3.1.py")
 spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
 if spec is None or spec.loader is None:
     raise ImportError(f"Unable to load StudyQuest v3.1 module from {MODULE_PATH}")
@@ -35,6 +35,8 @@ GoalManager = studyquest_module.GoalManager
 Player = studyquest_module.Player
 Difficulty = studyquest_module.Difficulty
 Frequency = studyquest_module.Frequency
+AddTaskDialog = studyquest_module.AddTaskDialog
+AddHabitDialog = studyquest_module.AddHabitDialog
 
 
 class _GridTableTestResult(unittest.TextTestResult):
@@ -144,6 +146,20 @@ class FrontendWindowsV31Tests(unittest.TestCase):
         self.addCleanup(_cleanup)
         return app
 
+    class _FakeEntry:
+        def __init__(self, value: str):
+            self._value = value
+
+        def get(self) -> str:
+            return self._value
+
+    class _FakeVar:
+        def __init__(self, value: int):
+            self._value = value
+
+        def get(self) -> int:
+            return self._value
+
     def test_main_window_renders_and_widgets_exist(self):
         app = self._build_app_no_popups(save_exists=False)
         app.update_idletasks()
@@ -199,6 +215,44 @@ class FrontendWindowsV31Tests(unittest.TestCase):
             app.update_idletasks()
 
         self.assertEqual(len(app.gm.goals), 2, "Expected one task + one habit added")
+
+    def test_delete_selected_removes_goal_from_list(self):
+        app = self._build_app_no_popups(save_exists=False)
+
+        app.gm.add_task("Delete me", "Desc", Difficulty.EASY, None)
+        app.refresh_ui()
+        app.update_idletasks()
+
+        self.assertEqual(len(app.gm.goals), 1)
+        app.tree.selection_set("1")
+
+        with mock.patch("tkinter.messagebox.askyesno", return_value=True):
+            app.on_delete_selected()
+
+        self.assertEqual(len(app.gm.goals), 0)
+        self.assertEqual(len(app.tree.get_children()), 0)
+
+    def test_add_task_dialog_rejects_empty_title(self):
+        dialog = AddTaskDialog.__new__(AddTaskDialog)
+        dialog.e_title = self._FakeEntry("   ")
+        dialog.var_has_due = self._FakeVar(0)
+        dialog.e_due = self._FakeEntry("")
+
+        with mock.patch("tkinter.messagebox.showwarning") as warning:
+            result = AddTaskDialog.validate(dialog)
+
+        self.assertFalse(result)
+        warning.assert_called_once_with("Validation", "Title cannot be empty")
+
+    def test_add_habit_dialog_rejects_empty_title(self):
+        dialog = AddHabitDialog.__new__(AddHabitDialog)
+        dialog.e_title = self._FakeEntry("   ")
+
+        with mock.patch("tkinter.messagebox.showwarning") as warning:
+            result = AddHabitDialog.validate(dialog)
+
+        self.assertFalse(result)
+        warning.assert_called_once_with("Validation", "Title cannot be empty")
 
     def test_ui_responsiveness_refresh_under_load(self):
         app = self._build_app_no_popups(save_exists=False)

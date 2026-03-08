@@ -1,0 +1,6 @@
+PLAYER|Harold|2|65|150
+GOAL|TASK|1|Draft report intro|Write the opening section for the Windows testing document.|Medium|2026-03-07|0
+GOAL|TASK|2|Revise screenshot captions|Tighten the wording under each figure in the document.|Easy|2026-03-06|0
+GOAL|HABIT|3|Daily document review|Spend ten minutes reviewing the testing document.|Easy|Daily|2|2|2026-03-04
+GOAL|TASK|4|Finish report appendix|Add the final notes and evidence references to the document.|Hard|2026-03-08|1
+GOAL|HABIT|5|Evening writing check-in|Review tomorrow's document-writing priorities.|Medium|Daily|2|2|2026-03-05
