@@ -1,8 +1,8 @@
-"""windowsTests/backendTest.py
+"""windowsTests/backendTest_v3_1.py
 
-	- Run using `python Documents/windowsTests/backendTest.py` from repo root.
+	- Run using `python Documents/windowsTests/backendTest_v3_1.py` from repo root.
 
-Windows OS - Backend unittest
+Windows OS - Backend unittest for StudyQuest v3.1
 """
 
 from __future__ import annotations
@@ -12,16 +12,35 @@ import sys
 import time
 import unittest
 import tempfile
+import importlib.util
 from datetime import date, timedelta
 
 
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
-PROGRAM_DIR = os.path.join(REPO_ROOT, "Program files")
-if PROGRAM_DIR not in sys.path:
-	sys.path.insert(0, PROGRAM_DIR)
 
-from StudyQuest_v2 import (
+
+MODULE_NAME = "StudyQuest_v3_1_runtime"
+MODULE_PATH = os.path.join(REPO_ROOT, "StudyQuest_v3.1.py")
+spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
+if spec is None or spec.loader is None:
+	raise ImportError(f"Unable to load StudyQuest v3.1 module from {MODULE_PATH}")
+studyquest_module = importlib.util.module_from_spec(spec)
+sys.modules[MODULE_NAME] = studyquest_module
+spec.loader.exec_module(studyquest_module)
+
+from_types = (
+	"Storage",
+	"Player",
+	"GoalManager",
+	"Task",
+	"Habit",
+	"Difficulty",
+	"Frequency",
+	"parse_date",
+)
+
+(
 	Storage,
 	Player,
 	GoalManager,
@@ -30,7 +49,7 @@ from StudyQuest_v2 import (
 	Difficulty,
 	Frequency,
 	parse_date,
-)
+) = (getattr(studyquest_module, name) for name in from_types)
 
 class _GridTableTestResult(unittest.TextTestResult):
 	def __init__(self, *args, **kwargs):

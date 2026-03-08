@@ -1,11 +1,13 @@
-"""windowsTests/frontendTest.py
+"""windowsTests/frontendTest_v3_1.py
 
-    - Run using `python Documents/windowsTests/frontendTest.py` from repo root.
+    - Run using `python Documents/windowsTests/frontendTest_v3_1.py` from repo root.
 
-Windows OS - Frontend unittest"""
+Windows OS - Frontend unittest for StudyQuest v3.1"""
 
 from __future__ import annotations
 
+import contextlib
+import importlib.util
 import os
 import sys
 import time
@@ -13,16 +15,26 @@ import unittest
 import tempfile
 from unittest import mock
 
-# Make StudyQuest_v2 importable when running tests from repo root.
 TEST_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(TEST_DIR, "..", ".."))
-PROGRAM_DIR = os.path.join(REPO_ROOT, "Program files")
-if PROGRAM_DIR not in sys.path:
-    sys.path.insert(0, PROGRAM_DIR)
+
+MODULE_NAME = "StudyQuest_v3_1_runtime"
+MODULE_PATH = os.path.join(REPO_ROOT, "StudyQuest_v3.1.py")
+spec = importlib.util.spec_from_file_location(MODULE_NAME, MODULE_PATH)
+if spec is None or spec.loader is None:
+    raise ImportError(f"Unable to load StudyQuest v3.1 module from {MODULE_PATH}")
+studyquest_module = importlib.util.module_from_spec(spec)
+sys.modules[MODULE_NAME] = studyquest_module
+spec.loader.exec_module(studyquest_module)
 
 import tkinter as tk
 
-from StudyQuest_v2 import MainApp, GoalManager, Player, Difficulty, Frequency
+
+MainApp = studyquest_module.MainApp
+GoalManager = studyquest_module.GoalManager
+Player = studyquest_module.Player
+Difficulty = studyquest_module.Difficulty
+Frequency = studyquest_module.Frequency
 
 
 class _GridTableTestResult(unittest.TextTestResult):
@@ -88,22 +100,28 @@ class _GridTableTestResult(unittest.TextTestResult):
         return "\n".join(out)
 
 
-class FrontendWindowsTests(unittest.TestCase):
+class FrontendWindowsV31Tests(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory(prefix="studyquest_frontend_")
         self.addCleanup(self._tmp.cleanup)
         self._old_cwd = os.getcwd()
         os.chdir(self._tmp.name)
         self.addCleanup(lambda: os.chdir(self._old_cwd))
+        self._home = os.path.join(self._tmp.name, "home")
+        os.makedirs(os.path.join(self._home, ".studyquest"), exist_ok=True)
+        self._env_patch = mock.patch.dict(os.environ, {"HOME": self._home, "USERPROFILE": self._home}, clear=False)
+        self._env_patch.start()
+        self.addCleanup(self._env_patch.stop)
 
     def _build_app_no_popups(self, save_exists: bool, save_contents: str | None = None) -> MainApp:
-        storage_path = "studyquest_save.txt"
+        storage_path = os.path.join(self._home, ".studyquest", "studyquest_save.txt")
         if save_exists:
+            os.makedirs(os.path.dirname(storage_path), exist_ok=True)
             with open(storage_path, "w", encoding="utf-8") as f:
                 f.write(save_contents or "")
 
         patchers = [
-            mock.patch("tkinter.simpledialog.askstring", return_value="WinUITester"),
+            mock.patch("tkinter.simpledialog.askstring", return_value="Harold"),
             mock.patch("tkinter.messagebox.showinfo"),
             mock.patch("tkinter.messagebox.showwarning"),
             mock.patch("tkinter.messagebox.showerror"),
@@ -118,7 +136,12 @@ class FrontendWindowsTests(unittest.TestCase):
             self.skipTest(f"Tk unavailable on this system: {e}")
 
         app.withdraw()
-        self.addCleanup(lambda: (app.destroy() if app.winfo_exists() else None))
+
+        def _cleanup() -> None:
+            with contextlib.suppress(Exception):
+                app.destroy()
+
+        self.addCleanup(_cleanup)
         return app
 
     def test_main_window_renders_and_widgets_exist(self):
@@ -129,8 +152,9 @@ class FrontendWindowsTests(unittest.TestCase):
         self.assertTrue(hasattr(app, "tree"), "Treeview should exist")
         self.assertTrue(hasattr(app, "lbl_level"), "Level label should exist")
         self.assertTrue(hasattr(app, "lbl_xp"), "XP label should exist")
+        self.assertTrue(hasattr(app, "var_show_tasks"), "Filter state should exist")
+        self.assertTrue(hasattr(app, "btn_delete"), "Delete button should exist")
 
-        # StudyQuest_v2 uses separate caption labels; these hold values only.
         level_text = app.lbl_level.cget("text")
         xp_text = app.lbl_xp.cget("text")
         self.assertTrue(str(level_text).strip().isdigit())
@@ -167,8 +191,8 @@ class FrontendWindowsTests(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 pass
 
-        with mock.patch("StudyQuest_v2.AddTaskDialog", _FakeTaskDialog), mock.patch(
-            "StudyQuest_v2.AddHabitDialog", _FakeHabitDialog
+        with mock.patch.object(studyquest_module, "AddTaskDialog", _FakeTaskDialog), mock.patch.object(
+            studyquest_module, "AddHabitDialog", _FakeHabitDialog
         ):
             app.on_add_task()
             app.on_add_habit()
@@ -228,7 +252,7 @@ class FrontendWindowsTests(unittest.TestCase):
         app = self._build_app_no_popups(save_exists=True, save_contents=corrupted)
         app.update_idletasks()
 
-        self.assertTrue(isinstance(app.player, Player))
+        self.assertIsInstance(app.player, Player)
         self.assertGreaterEqual(app.player.level, 1)
 
 
