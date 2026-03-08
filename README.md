@@ -10,6 +10,7 @@ macOS bug fixes
 The save file was moved to the following directory:
     C -> Users -> <your-username> -> .studyquest -> studyquest_save.txt (Windows)
     /Users/<your-username>/.studyquest/studyquest_save.txt (macOS)
+
 Fixed the macOS bug where the save file is never written
     due to macOS's security restrictions (Errno 30 read-only file system)
     
