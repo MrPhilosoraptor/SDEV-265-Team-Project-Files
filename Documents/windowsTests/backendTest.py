@@ -417,7 +417,7 @@ class StabilityPerformanceTests(BackendTestBase):
 
 if __name__ == "__main__":
 	suite = unittest.defaultTestLoader.loadTestsFromModule(sys.modules[__name__])
-	runner = unittest.TextTestRunner(verbosity=2, resultclass=_GridTableTestResult)
+	runner = unittest.TextTestRunner(stream=sys.stdout, verbosity=2, resultclass=_GridTableTestResult)
 	result = runner.run(suite)
 	print("\n## Backend Test Results (Windows)\n")
 	print(result.render_grid_table())
