@@ -1,7 +1,18 @@
 StudyQuest
 CHANGELOG
-Current Version: 3.0
+Current Version: 3.1
 
+============================================================================
+
+Version 3.1
+macOS bug fixes
+
+The save file was moved to the following directory:
+    C -> Users -> <your-username> -> .studyquest -> studyquest_save.txt (Windows)
+    /Users/<your-username>/.studyquest/studyquest_save.txt (macOS)
+Fixed the macOS bug where the save file is never written
+    due to macOS's security restrictions (Errno 30 read-only file system)
+    
 ============================================================================
 
 Version 3.0
