@@ -1,6 +1,4 @@
-StudyQuest
-CHANGELOG
-Current Version: 3.1
+StudyQuest CHANGELOG | Current Version: 3.1
 
 ============================================================================
 
